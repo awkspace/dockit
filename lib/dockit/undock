@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]
+then
+    echo "Usage: undock file..."
+    exit
+fi
+
+user=$(ls -ld /host | awk '{print $3}')
+group=$(ls -ld /host | awk '{print $4}')
+tmp=$(mktemp -d)
+
+for file in "$@"
+do
+    mv $file /tmp/$file
+    mv /tmp/$file /host/$file
+    chown $user:$group /host/$file
+    chown -R $(id -u):$(id -g) $file
+done
+
+rm -rf $tmp

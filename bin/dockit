@@ -1,0 +1,17 @@
+#!/bin/sh
+
+img=$1
+docker pull $img
+
+scriptdir="$(dirname "$0")"
+lib="$(cd $scriptdir/../lib ; pwd)/dockit"
+
+docker run \
+    --rm \
+    --cap-add=SYS_ADMIN \
+    -ti \
+    -v $lib/init:/dockit-init \
+    -v $lib/undock:/bin/undock \
+    -v $(pwd):/host \
+    $img \
+    /dockit-init

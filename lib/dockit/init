@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+mount -t tmpfs tmpfs /tmp
+mkdir -p /tmp/upper /tmp/overlay /docked
+mount -t overlay overlay -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay /docked
+chown -R $(id -u):$(id -g) /docked
+cd /docked
+if [ -f /bin/bash ] ; then /bin/bash ; else /bin/sh ; fi
