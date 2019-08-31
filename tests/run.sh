@@ -161,8 +161,26 @@ test_start "Dock as other user"
     dock=$(dock -d -m 65534 alpine)
 
     ls=$(docker exec $dock ls -ln /docked/file)
-
     [ "$(echo $ls | awk '{print $3,$4}')" = "65534 65534" ]
+)
+test_finish
+
+test_start "Default to Docker USER"
+(
+    set -e
+    [ "$verbose" ] && set -x
+   
+    touch $testdir/file
+
+    {
+        cd $(dirname "$0")
+        img=$(docker build -q -f Dockerfile.withuser .)
+    }
+
+    dock=$(dock -d $img)
+
+    ls=$(docker exec $dock ls -ln /docked/file)
+    [ "$(echo $ls | awk '{print $3,$4}')" = "1234 1234" ]
 )
 test_finish
 
