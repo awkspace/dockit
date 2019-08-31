@@ -1,35 +1,55 @@
 #!/bin/sh
 
-function cleanup() {
+function setup() {
 
-    echo "CLEANUP"
-    echo "-------"
+    dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
 
-    if [ "$tmpdirs" ]
-    then
-        while read tmpdir
-        do
-            echo "Deleting temporary directory: $tmpdir"
-            rm -rf $tmpdir
-        done <$tmpdirs
-    fi
+    tmpdirs=$(mktemp)
+    containers=$(mktemp)
 
-    if [ "$containers" ]
-    then
-        while read container
-        do
-           echo "Deleting container: $container"
-           docker rm -f $container >/dev/null
-        done <$containers
-        rm -f $containers
-    fi
+}
 
-    exit $1
+function teardown() {
+
+    rm -f $tmpdirs
+    rm -f $containers
+
+}
+
+function setup_testdir() {
+
+    testdir=$(mktemp -d | tee -a $tmpdirs)
+
+}
+
+function dock() {
+
+    cd $testdir
+    container=$(sh $dockit $@ 2>/dev/null)
+    echo $container | tee -a $containers
+
+}
+
+function test_cleanup() {
+
+    while read tmpdir
+    do
+        rm -rf $tmpdir
+    done <$tmpdirs
+    printf '' > $tmpdirs
+
+    while read container
+    do
+        docker rm -f $container >/dev/null
+    done <$containers
+    printf '' > $containers
 
 }
 
 function test_start() {
 
+    setup_testdir
+   
     title="TEST: $1"
     len=$(expr length "$title")
 
@@ -42,7 +62,7 @@ function test_start() {
 
 }
 
-function test_result() {
+function test_finish() {
 
     if [ $? -eq 0 ]
     then
@@ -52,92 +72,69 @@ function test_result() {
     fi
     echo
 
+    test_cleanup
+
 }
 
-dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
-
-tmpdirs=$(mktemp)
-containers=$(mktemp)
+setup
 
 test_start "Docked file has correct ownership in container"
 (
     set -e
 
-    tmpdir=$(mktemp -d)
-    echo $tmpdir >> $tmpdirs
-
-    touch $tmpdir/file
-    chown -R nobody:nobody $tmpdir
+    touch $testdir/file
+    chown -R nobody:nobody $testdir
    
-    cd $tmpdir
-    container=$(sh $dockit -d alpine 2>/dev/null)
-    echo $container >> $containers
+    dock=$(dock -d alpine)
 
-    ls=$(docker exec $container ls -l /docked/file)
+    ls=$(docker exec $dock ls -l /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "root root" ]
 )
-test_result
+test_finish
 
 test_start "Changes do not propagate to host"
 (
     set -e
 
-    tmpdir=$(mktemp -d)
-    echo $tmpdir >> $tmpdirs
+    touch $testdir/file1
+    dock=$(dock -d alpine)
 
-    touch $tmpdir/file1
+    docker exec $dock rm /docked/file1
+    docker exec $dock touch /docked/file2
 
-    cd $tmpdir
-    container=$(sh $dockit -d alpine 2>/dev/null)
-    echo $container >> $containers
-
-    docker exec $container rm /docked/file1
-    docker exec $container touch /docked/file2
-
-    docker exec $container [ ! -f /docked/file1 ]
-    docker exec $container [ -f /docked/file2 ]
-    [ -f $tmpdir/file1 ]
-    [ ! -f $tmpdir/file2 ]
+    docker exec $dock [ ! -f /docked/file1 ]
+    docker exec $dock [ -f /docked/file2 ]
+    [ -f $testdir/file1 ]
+    [ ! -f $testdir/file2 ]
 )
-test_result
+test_finish
 
 test_start "Undocked file is present in host and container"
 (
     set -e
 
-    tmpdir=$(mktemp -d)
-    echo $tmpdir >> $tmpdirs
+    dock=$(dock -d alpine)
 
-    cd $tmpdir
-    container=$(sh $dockit -d alpine 2>/dev/null)
-    echo $container >> $containers
+    docker exec $dock touch /docked/file
+    docker exec $dock /bin/sh -c "cd /docked; undock file"
 
-    docker exec $container touch /docked/file
-    docker exec $container /bin/sh -c "cd /docked; undock file"
-
-    docker exec $container [ -f /docked/file ]
-    [ -f $tmpdir/file ]
+    docker exec $dock [ -f /docked/file ]
+    [ -f $testdir/file ]
 )
-test_result
+test_finish
 
 test_start "Undocked file has correct ownership on host"
 (
     set -e
 
-    tmpdir=$(mktemp -d)
-    echo $tmpdir >> $tmpdirs
+    chown nobody:nobody $testdir
+    dock=$(dock -d alpine)
 
-    chown nobody:nobody $tmpdir
+    docker exec $dock touch /docked/file
+    docker exec $dock /bin/sh -c "cd /docked; undock file"
 
-    cd $tmpdir
-    container=$(sh $dockit -d alpine 2>/dev/null)
-    echo $container >> $containers
-
-    docker exec $container touch /docked/file
-    docker exec $container /bin/sh -c "cd /docked; undock file"
-
-    [ "$(ls -l $tmpdir/file | awk '{print $3,$4}')" = "nobody nobody" ]
+    [ "$(ls -l $testdir/file | awk '{print $3,$4}')" = "nobody nobody" ]
 )
-test_result
+test_finish
 
-cleanup 0
+teardown
