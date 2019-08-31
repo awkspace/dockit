@@ -16,6 +16,7 @@ setup() {
 
     tmpdirs=$(mktemp)
     containers=$(mktemp)
+    images=$(mktemp)
 
 }
 
@@ -23,6 +24,7 @@ teardown() {
 
     rm -f $tmpdirs
     rm -f $containers
+    rm -f $images
 
 }
 
@@ -40,6 +42,15 @@ dock() {
 
 }
 
+build_image() {
+
+    {
+        cd $(dirname "$0")
+        docker build -q -f $1 . | tee -a $images
+    }
+
+}
+
 test_cleanup() {
 
     while read tmpdir
@@ -53,6 +64,12 @@ test_cleanup() {
         docker rm -f $container >/dev/null
     done <$containers
     printf '' > $containers
+
+    while read image
+    do
+        docker rmi -f $image >/dev/null
+    done <$images
+    printf '' > $images
 
 }
 
@@ -172,11 +189,7 @@ test_start "Default to Docker USER"
    
     touch $testdir/file
 
-    {
-        cd $(dirname "$0")
-        img=$(docker build -q -f Dockerfile.withuser .)
-    }
-
+    img=$(build_image Dockerfile.withuser)
     dock=$(dock -d $img)
 
     ls=$(docker exec $dock ls -ln /docked/file)
