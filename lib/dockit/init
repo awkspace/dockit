@@ -2,9 +2,33 @@
 
 set -e
 
+while getopts ":a:" opt
+do
+    case $opt in
+        a)
+            mount_as=$OPTARG
+            shift 2
+            ;;
+        \?)
+            echo "Unrecognized option: -$OPTARG"
+            exit 1
+            ;;
+        :)
+            echo "-$OPTARG requires an argument" 1>&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$mount_as" ]
+then
+    echo "-a is required" 1>&2
+    exit 1
+fi
+
 mount -t tmpfs tmpfs /tmp
 mkdir -p /tmp/upper /tmp/overlay /docked
 mount -t overlay overlay -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay /docked
-chown -R $(id -u):$(id -g) /docked
+chown -R $mount_as /docked
 cd /docked
 if [ -f /bin/bash ] ; then /bin/bash ; else /bin/sh ; fi

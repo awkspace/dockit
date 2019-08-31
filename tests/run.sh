@@ -2,6 +2,14 @@
 
 setup() {
 
+    while getopts "v:" opt
+    do
+        case $opt in
+            v)
+                verbose=true
+                shift
+        esac
+    done
     dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
 
     tmpdirs=$(mktemp)
@@ -81,6 +89,7 @@ setup
 test_start "Docked file has correct ownership in container"
 (
     set -e
+    [ -z "$verbose" ] && set -x
 
     touch $testdir/file
     chown -R 65534:65534 $testdir
@@ -95,6 +104,7 @@ test_finish
 test_start "Changes do not propagate to host"
 (
     set -e
+    [ -z "$verbose" ] && set -x
 
     touch $testdir/file1
     dock=$(dock -d alpine)
@@ -112,6 +122,7 @@ test_finish
 test_start "Undocked file is present in host and container"
 (
     set -e
+    [ -z "$verbose" ] && set -x
 
     dock=$(dock -d alpine)
 
@@ -126,6 +137,7 @@ test_finish
 test_start "Undocked file has correct ownership on host"
 (
     set -e
+    [ -z "$verbose" ] && set -x
 
     chown 65534:65534 $testdir
     dock=$(dock -d alpine)
@@ -134,6 +146,20 @@ test_start "Undocked file has correct ownership on host"
     docker exec $dock /bin/sh -c "cd /docked; undock file"
 
     [ "$(ls -ln $testdir/file | awk '{print $3,$4}')" = "65534 65534" ]
+)
+test_finish
+
+test_start "Dock as other user"
+(
+    set -e
+    [ -z "$verbose" ] && set -x
+
+    touch $testdir/file
+    dock=$(dock -d -a 65534:65534 alpine)
+
+    ls=$(docker exec $dock ls -ln /docked/file)
+
+    [ "$(echo $ls | awk '{print $3,$4}')" = "65534 65534" ]
 )
 test_finish
 

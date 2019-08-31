@@ -1,13 +1,31 @@
 #!/bin/sh
 
-while getopts "d:"  opt
+while getopts ":da:" opt
 do
     case $opt in
         d)
             detach=true
             shift
+            ;;
+        a)
+            mount_as=$OPTARG
+            shift 2
+            ;;
+        \?)
+            echo "Unrecognized option: -$OPTARG"
+            exit 1
+            ;;
+        :)
+            echo "-$OPTARG requires an argument" 1>&2
+            exit 1
+            ;;
     esac
 done
+
+if [ -z "$mount_as" ]
+then
+    mount_as="$(id -u):$(id -g)"
+fi
 
 img=$1
 docker pull $img 1>&2
@@ -24,4 +42,4 @@ docker run \
     -v $lib/undock:/bin/undock \
     -v $(pwd):/host \
     $img \
-    /dockit-init
+    /dockit-init -a $mount_as
