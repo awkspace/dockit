@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function setup() {
+setup() {
 
     dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
 
@@ -9,20 +9,20 @@ function setup() {
 
 }
 
-function teardown() {
+teardown() {
 
     rm -f $tmpdirs
     rm -f $containers
 
 }
 
-function setup_testdir() {
+setup_testdir() {
 
     testdir=$(mktemp -d | tee -a $tmpdirs)
 
 }
 
-function dock() {
+dock() {
 
     cd $testdir
     container=$(sh $dockit $@ 2>/dev/null)
@@ -30,7 +30,7 @@ function dock() {
 
 }
 
-function test_cleanup() {
+test_cleanup() {
 
     while read tmpdir
     do
@@ -46,7 +46,7 @@ function test_cleanup() {
 
 }
 
-function test_start() {
+test_start() {
 
     setup_testdir
    
@@ -62,7 +62,7 @@ function test_start() {
 
 }
 
-function test_finish() {
+test_finish() {
 
     if [ $? -eq 0 ]
     then
@@ -83,12 +83,12 @@ test_start "Docked file has correct ownership in container"
     set -e
 
     touch $testdir/file
-    chown -R nobody:nobody $testdir
+    chown -R 65534:65534 $testdir
    
     dock=$(dock -d alpine)
 
-    ls=$(docker exec $dock ls -l /docked/file)
-    [ "$(echo $ls | awk '{print $3,$4}')" = "root root" ]
+    ls=$(docker exec $dock ls -ln /docked/file)
+    [ "$(echo $ls | awk '{print $3,$4}')" = "0 0" ]
 )
 test_finish
 
@@ -127,13 +127,13 @@ test_start "Undocked file has correct ownership on host"
 (
     set -e
 
-    chown nobody:nobody $testdir
+    chown 65534:65534 $testdir
     dock=$(dock -d alpine)
 
     docker exec $dock touch /docked/file
     docker exec $dock /bin/sh -c "cd /docked; undock file"
 
-    [ "$(ls -l $testdir/file | awk '{print $3,$4}')" = "nobody nobody" ]
+    [ "$(ls -ln $testdir/file | awk '{print $3,$4}')" = "65534 65534" ]
 )
 test_finish
 

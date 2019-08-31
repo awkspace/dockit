@@ -17,7 +17,7 @@ lib="$(cd $scriptdir/../lib ; pwd)/dockit"
 
 docker run \
     --rm \
-    --cap-add=SYS_ADMIN \
+    --privileged \
     -ti \
     ${detach:+-d} \
     -v $lib/init:/dockit-init \
