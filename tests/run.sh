@@ -59,7 +59,7 @@ dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
 tmpdirs=$(mktemp)
 containers=$(mktemp)
 
-test_start "Docked file has correct ownership"
+test_start "Docked file has correct ownership in container"
 (
     set -e
 
@@ -74,11 +74,7 @@ test_start "Docked file has correct ownership"
     echo $container >> $containers
 
     ls=$(docker exec $container ls -l /docked/file)
-    user=$(echo $ls | awk '{print $3}')
-    group=$(echo $ls | awk '{print $4}')
-
-    [ "$user" = "root" ]
-    [ "$group" = "root" ]
+    [ "$(echo $ls | awk '{print $3,$4}')" = "root root" ]
 )
 test_result
 
@@ -102,6 +98,45 @@ test_start "Changes do not propagate to host"
     docker exec $container [ -f /docked/file2 ]
     [ -f $tmpdir/file1 ]
     [ ! -f $tmpdir/file2 ]
+)
+test_result
+
+test_start "Undocked file is present in host and container"
+(
+    set -e
+
+    tmpdir=$(mktemp -d)
+    echo $tmpdir >> $tmpdirs
+
+    cd $tmpdir
+    container=$(sh $dockit -d alpine 2>/dev/null)
+    echo $container >> $containers
+
+    docker exec $container touch /docked/file
+    docker exec $container /bin/sh -c "cd /docked; undock file"
+
+    docker exec $container [ -f /docked/file ]
+    [ -f $tmpdir/file ]
+)
+test_result
+
+test_start "Undocked file has correct ownership on host"
+(
+    set -e
+
+    tmpdir=$(mktemp -d)
+    echo $tmpdir >> $tmpdirs
+
+    chown nobody:nobody $tmpdir
+
+    cd $tmpdir
+    container=$(sh $dockit -d alpine 2>/dev/null)
+    echo $container >> $containers
+
+    docker exec $container touch /docked/file
+    docker exec $container /bin/sh -c "cd /docked; undock file"
+
+    [ "$(ls -l $tmpdir/file | awk '{print $3,$4}')" = "nobody nobody" ]
 )
 test_result
 
