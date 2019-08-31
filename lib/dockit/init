@@ -2,11 +2,15 @@
 
 set -e
 
-while getopts ":a:" opt
+while getopts ":m:r:" opt
 do
     case $opt in
-        a)
+        m)
             mount_as=$OPTARG
+            shift 2
+            ;;
+        r)
+            run_as=$OPTARG
             shift 2
             ;;
         \?)
@@ -22,13 +26,25 @@ done
 
 if [ -z "$mount_as" ]
 then
-    echo "-a is required" 1>&2
+    echo "-m is required" 1>&2
+    exit 1
+fi
+
+if [ -z "$run_as" ]
+then
+    echo "-r is required" 1>&2
     exit 1
 fi
 
 mount -t tmpfs tmpfs /tmp
 mkdir -p /tmp/upper /tmp/overlay /docked
 mount -t overlay overlay -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay /docked
-chown -R $mount_as /docked
+chown -R $mount_as:$(id -g $mount_as) /docked
 cd /docked
-if [ -f /bin/bash ] ; then /bin/bash ; else /bin/sh ; fi
+
+if [ -f /bin/bash ]
+then
+    su $run_as -c /bin/bash
+else
+    su $run_as -c /bin/sh
+fi

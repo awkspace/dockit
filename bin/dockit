@@ -1,14 +1,18 @@
 #!/bin/sh
 
-while getopts ":da:" opt
+while getopts ":dm:r:" opt
 do
     case $opt in
         d)
             detach=true
             shift
             ;;
-        a)
+        m)
             mount_as=$OPTARG
+            shift 2
+            ;;
+        r)
+            run_as=$OPTARG
             shift 2
             ;;
         \?)
@@ -22,19 +26,37 @@ do
     esac
 done
 
-if [ -z "$mount_as" ]
-then
-    mount_as="$(id -u):$(id -g)"
-fi
-
 img=$1
 docker pull $img 1>&2
+
+user=$(docker image inspect $img --format "{{.ContainerConfig.User}}")
+
+if [ -z "$mount_as" ]
+then
+    if [ "$user" ]
+    then
+        mount_as="$user"
+    else
+        mount_as="root"
+    fi
+fi
+
+if [ -z "$run_as" ]
+then
+    if [ "$user" ]
+    then
+        run_as=$user
+    else
+        run_as="root"
+    fi
+fi
 
 scriptdir="$(dirname "$0")"
 lib="$(cd $scriptdir/../lib ; pwd)/dockit"
 
 docker run \
     --rm \
+    -u 0:0 \
     --privileged \
     -ti \
     ${detach:+-d} \
@@ -42,4 +64,4 @@ docker run \
     -v $lib/undock:/bin/undock \
     -v $(pwd):/host \
     $img \
-    /dockit-init -a $mount_as
+    /dockit-init -m $mount_as -r $run_as
