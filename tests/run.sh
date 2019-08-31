@@ -5,10 +5,13 @@ function cleanup() {
     echo "CLEANUP"
     echo "-------"
 
-    if [ "$tmpdir" ]
+    if [ "$tmpdirs" ]
     then
-        echo "Deleting temporary directory: $tmpdir"
-        rm -rf $tmpdir
+        while read tmpdir
+        do
+            echo "Deleting temporary directory: $tmpdir"
+            rm -rf $tmpdir
+        done <$tmpdirs
     fi
 
     if [ "$containers" ]
@@ -53,15 +56,18 @@ function test_result() {
 
 dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
 
-tmpdir=$(mktemp -d)
+tmpdirs=$(mktemp)
 containers=$(mktemp)
-
-touch $tmpdir/file
-chown -R nobody:nobody $tmpdir
 
 test_start "Docked file has correct ownership"
 (
     set -e
+
+    tmpdir=$(mktemp -d)
+    echo $tmpdir >> $tmpdirs
+
+    touch $tmpdir/file
+    chown -R nobody:nobody $tmpdir
    
     cd $tmpdir
     container=$(sh $dockit -d alpine 2>/dev/null)
@@ -73,6 +79,29 @@ test_start "Docked file has correct ownership"
 
     [ "$user" = "root" ]
     [ "$group" = "root" ]
+)
+test_result
+
+test_start "Changes do not propagate to host"
+(
+    set -e
+
+    tmpdir=$(mktemp -d)
+    echo $tmpdir >> $tmpdirs
+
+    touch $tmpdir/file1
+
+    cd $tmpdir
+    container=$(sh $dockit -d alpine 2>/dev/null)
+    echo $container >> $containers
+
+    docker exec $container rm /docked/file1
+    docker exec $container touch /docked/file2
+
+    docker exec $container [ ! -f /docked/file1 ]
+    docker exec $container [ -f /docked/file2 ]
+    [ -f $tmpdir/file1 ]
+    [ ! -f $tmpdir/file2 ]
 )
 test_result
 
