@@ -2,7 +2,7 @@
 
 if [ $# -eq 0 ]
 then
-    echo "Usage: undock file..."
+    echo "Usage: undock <file1> [<file2>]..."
     exit
 fi
 

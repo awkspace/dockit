@@ -1,8 +1,27 @@
 #!/bin/sh
 
-while getopts ":dm:r:" opt
+help() {
+
+    echo "dockit - Mount the current directory into a Docker container"
+    echo
+    echo "Usage: dockit [options] <image>"
+    echo
+    echo "Options:"
+    echo "-h         this help text"
+    echo "-d         detach; run in background, useful for scripting"
+    echo "-m <user>  mount directory as <user> instead of default"
+    echo "-r <user>  run shell as <user> instead of default"
+
+    exit 0
+
+}
+
+while getopts ":hdm:r:" opt
 do
     case $opt in
+        h)
+            help
+            ;;
         d)
             detach=true
             ;;
@@ -23,6 +42,11 @@ do
     esac
 done
 shift $(($OPTIND-1))
+
+if [ $# -eq 0 ]
+then
+    help
+fi
 
 img=$1
 docker pull $img 1>&2
