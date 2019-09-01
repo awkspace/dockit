@@ -51,7 +51,7 @@ test_cleanup() {
 
     while read container
     do
-        docker rm -f $container >/dev/null
+        docker stop -t 0 $container >/dev/null
     done <$containers
     printf '' > $containers
 
