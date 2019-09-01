@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ ! $(id -u) -eq 0 ]
+then
+    echo "Tests must be run with elevated privileges."
+    exit 1
+fi
+
 setup() {
 
     dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
