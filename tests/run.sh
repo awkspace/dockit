@@ -1,15 +1,5 @@
 #!/bin/sh
 
-while getopts ":v" opt
-do
-    case $opt in
-        v)
-            verbose=true
-            ;;
-    esac
-done
-shift $(($OPTIND-1))
-
 setup() {
 
     dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
@@ -73,58 +63,64 @@ test_cleanup() {
 
 }
 
-test_start() {
+run_test() {
 
     setup_testdir
-   
-    title="TEST: $1"
-    len=$(expr length "$title")
 
-    echo $title
-    for i in $(seq $len)
-    do
-        printf "-"
-    done
-    echo
+    printf "$1... "
 
-}
-
-test_finish() {
+    output=$(set -e ; $2 2>&1)
 
     if [ $? -eq 0 ]
     then
-        echo "PASS"
+        echo -e "\e[1m\e[92mPASS\e[0m"
     else
-        echo "FAIL"
+        echo -e "\e[1m\e[91mFAIL\e[0m"
+        failed_tests="$failed_tests$1
+---
+$output
+---
+
+"
     fi
-    echo
 
     test_cleanup
 
 }
 
+results() {
+
+    if [ "$failed_tests" ]
+    then
+        echo
+        echo "Test failures:"
+        echo
+        echo "$failed_tests"
+        result=1
+    else
+        result=0
+    fi
+}
+
 setup
 
-
-test_start "Docked file has correct ownership in container"
-(
-    set -e
-    [ "$verbose" ] && set -x
-
+name="Docked file has correct ownership in container"
+_() {
+    set -x
+   
     touch $testdir/file
     chown -R 65534:65534 $testdir
-   
+
     dock=$(dock -d alpine)
 
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "0 0" ]
-)
-test_finish
+}
+run_test "$name" _
 
-test_start "Changes do not propagate to host"
-(
-    set -e
-    [ "$verbose" ] && set -x
+name="Changes do not propagate to host"
+_() {
+    set -x
 
     touch $testdir/file1
     dock=$(dock -d alpine)
@@ -136,13 +132,12 @@ test_start "Changes do not propagate to host"
     docker exec $dock [ -f /docked/file2 ]
     [ -f $testdir/file1 ]
     [ ! -f $testdir/file2 ]
-)
-test_finish
+}
+run_test "$name" _
 
-test_start "Undocked file is present in host and container"
-(
-    set -e
-    [ "$verbose" ] && set -x
+name="Undocked file is present in host and container"
+_() {
+    set -x
 
     dock=$(dock -d alpine)
 
@@ -151,13 +146,12 @@ test_start "Undocked file is present in host and container"
 
     docker exec $dock [ -f /docked/file ]
     [ -f $testdir/file ]
-)
-test_finish
+}
+run_test "$name" _
 
-test_start "Undocked file has correct ownership on host"
-(
-    set -e
-    [ "$verbose" ] && set -x
+name="Undocked file has correct ownership on host"
+_() {
+    set -x
 
     chown 65534:65534 $testdir
     dock=$(dock -d alpine)
@@ -166,27 +160,25 @@ test_start "Undocked file has correct ownership on host"
     docker exec $dock /bin/sh -c "cd /docked; undock file"
 
     [ "$(ls -ln $testdir/file | awk '{print $3,$4}')" = "65534 65534" ]
-)
-test_finish
+}
+run_test "$name" _
 
-test_start "Dock as other user"
-(
-    set -e
-    [ "$verbose" ] && set -x
+name="Dock as other user"
+_() {
+    set -x
 
     touch $testdir/file
     dock=$(dock -d -m 65534 alpine)
 
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "65534 65534" ]
-)
-test_finish
+}
+run_test "$name" _
 
-test_start "Default to Docker USER"
-(
-    set -e
-    [ "$verbose" ] && set -x
-   
+name="Default to Docker USER"
+_() {
+    set -x
+
     touch $testdir/file
 
     img=$(build_image Dockerfile.withuser)
@@ -194,7 +186,10 @@ test_start "Default to Docker USER"
 
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "1234 1234" ]
-)
-test_finish
+}
+run_test "$name" _
 
+results
 teardown
+
+exit $result
