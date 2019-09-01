@@ -5,15 +5,12 @@ do
     case $opt in
         d)
             detach=true
-            shift
             ;;
         m)
             mount_as=$OPTARG
-            shift 2
             ;;
         r)
             run_as=$OPTARG
-            shift 2
             ;;
         \?)
             echo "Unrecognized option: -$OPTARG"
@@ -25,6 +22,7 @@ do
             ;;
     esac
 done
+shift $(($OPTIND-1))
 
 img=$1
 docker pull $img 1>&2

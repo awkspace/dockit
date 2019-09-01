@@ -5,10 +5,10 @@ do
     case $opt in
         v)
             verbose=true
-            shift
             ;;
     esac
 done
+shift $(($OPTIND-1))
 
 setup() {
 

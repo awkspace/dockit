@@ -7,11 +7,9 @@ do
     case $opt in
         m)
             mount_as=$OPTARG
-            shift 2
             ;;
         r)
             run_as=$OPTARG
-            shift 2
             ;;
         \?)
             echo "Unrecognized option: -$OPTARG"
@@ -23,6 +21,7 @@ do
             ;;
     esac
 done
+shift $(($OPTIND-1))
 
 if [ -z "$mount_as" ]
 then
