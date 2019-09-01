@@ -10,4 +10,4 @@ fi
 dir=$(dirname "$0")
 
 cp $dir/bin/dockit /usr/local/bin/dockit
-cp -r $dir/lib/dockit/ /usr/local/lib/dockit/
+cp -r $dir/lib/dockit /usr/local/lib
