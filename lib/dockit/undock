@@ -14,10 +14,23 @@ tmp=$(mktemp -d)
 
 for file in "$@"
 do
-    mv $file /tmp/$file
-    mv /tmp/$file /host/$file
-    chown -R $hostuser:$hostgroup /host/$file
-    chown -R $dockuser:$dockgroup $file
+
+    fullpath=$(readlink -f $file)
+    dirname=$(dirname $fullpath)
+    basename=$(basename $fullpath)
+
+    if [ ! "$dirname" = "/docked" ]
+    then
+        echo "$1 is not inside of /docked"
+        exit 1
+    fi
+
+    mv $fullpath /tmp/$basename
+    mv /tmp/$basename /host/$basename
+
+    chown -R $hostuser:$hostgroup /host/$basename
+    chown -R $dockuser:$dockgroup $fullpath
+
 done
 
 rm -rf $tmp

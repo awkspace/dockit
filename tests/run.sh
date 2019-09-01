@@ -142,7 +142,7 @@ _() {
     dock=$(dock -d alpine)
 
     docker exec $dock touch /docked/file
-    docker exec $dock /bin/sh -c "cd /docked; undock file"
+    docker exec $dock undock /docked/file
 
     docker exec $dock [ -f /docked/file ]
     [ -f $testdir/file ]
@@ -157,7 +157,7 @@ _() {
     dock=$(dock -d alpine)
 
     docker exec $dock touch /docked/file
-    docker exec $dock /bin/sh -c "cd /docked; undock file"
+    docker exec $dock undock /docked/file
 
     [ "$(ls -ln $testdir/file | awk '{print $3,$4}')" = "65534 65534" ]
 }
