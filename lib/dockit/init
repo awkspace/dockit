@@ -37,7 +37,7 @@ fi
 
 mount -t tmpfs tmpfs /tmp
 mkdir -p /tmp/upper /tmp/overlay /docked
-mount -t overlay overlay -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay /docked
+mount -t overlay overlay -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay,metacopy=on /docked
 chown -R $mount_as:$(id -g $mount_as) /docked
 cd /docked
 
