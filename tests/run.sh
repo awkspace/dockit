@@ -73,9 +73,9 @@ run_test() {
 
     if [ $? -eq 0 ]
     then
-        echo -e "\e[1m\e[92mPASS\e[0m"
+        printf "\e[1m\e[92mPASS\e[0m\n"
     else
-        echo -e "\e[1m\e[91mFAIL\e[0m"
+        printf "\e[1m\e[91mFAIL\e[0m\n"
         failed_tests="$failed_tests$1
 ---
 $output
