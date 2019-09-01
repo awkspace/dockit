@@ -73,3 +73,7 @@ to the host, you can do so using the `undock` command from within the container.
 /docked # undock
 Usage: undock <file1> [<file2>]...
 ```
+
+## License
+
+`dockit`, such as it is, is licensed under [MIT](LICENSE).
