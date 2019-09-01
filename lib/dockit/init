@@ -35,13 +35,12 @@ then
     exit 1
 fi
 
-mount -t tmpfs tmpfs /tmp
-mkdir -p /tmp/upper /tmp/overlay /docked
+mkdir -p /overlay/upper /overlay/work /docked
 
 [ -f /sys/module/overlay/parameters/metacopy ] && metacopy=1
 mount -t \
     overlay overlay \
-    -o lowerdir=/host,upperdir=/tmp/upper,workdir=/tmp/overlay${metacopy:+,metacopy=on} \
+    -o lowerdir=/host,upperdir=/overlay/upper,workdir=/overlay/work${metacopy:+,metacopy=on} \
     /docked
 
 chown -R $mount_as:$(id -g $mount_as) /docked

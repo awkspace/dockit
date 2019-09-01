@@ -82,6 +82,7 @@ docker run \
     --privileged \
     -ti \
     ${detach:+-d} \
+    -v /overlay \
     -v $lib/init:/dockit-init \
     -v $lib/undock:/bin/undock \
     -v $(pwd):/host \
