@@ -118,7 +118,7 @@ _() {
 }
 run_test "$name" _
 
-name="Changes do not propagate to host"
+name="Changes in /docked do not propagate to host"
 _() {
     set -x
 
