@@ -20,7 +20,14 @@ teardown() {
 
 setup_testdir() {
 
-    testdir=$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXXXXX" | tee -a $tmpdirs)
+    case "$OSTYPE" in
+        darwin*)
+            testdir=$(mktemp -d /tmp/tmp.XXXXXXXXXX | tee -a $tmpdirs)
+            ;;
+        *)
+            testdir=$(mktemp -d | tee -a $tmpdirs)
+            ;;
+    esac
 
 }
 
