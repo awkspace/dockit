@@ -1,11 +1,5 @@
 #!/bin/sh
 
-if [ ! $(id -u) -eq 0 ]
-then
-    echo "Tests must be run with elevated privileges."
-    exit 1
-fi
-
 setup() {
 
     dockit="$(cd $(dirname "$0")/../bin; pwd)/dockit"
@@ -115,7 +109,7 @@ _() {
     set -x
    
     touch $testdir/file
-    chown -R 65534:65534 $testdir
+    [ "$(id -u)" -eq 0 ] && chown -R 65534:65534 $testdir
 
     dock=$(dock -d alpine)
 
@@ -159,13 +153,23 @@ name="Undocked file has correct ownership on host"
 _() {
     set -x
 
-    chown 65534:65534 $testdir
+    if [ "$(id -u)" -eq 0 ]
+    then
+        host_user=65534
+        host_group=65534
+    else
+        host_user="$(id -u)"
+        host_group="$(id -g)"
+    fi
+
+    chown -R $host_user:$host_group $testdir
     dock=$(dock -d alpine)
 
     docker exec $dock touch /docked/file
     docker exec $dock undock /docked/file
 
-    [ "$(ls -ln $testdir/file | awk '{print $3,$4}')" = "65534 65534" ]
+    owner=$(ls -ln $testdir/file | awk '{print $3,$4}')
+    [ "$owner" = "$host_user $host_group" ]
 }
 run_test "$name" _
 
