@@ -26,7 +26,7 @@ teardown() {
 
 setup_testdir() {
 
-    testdir=$(mktemp -d | tee -a $tmpdirs)
+    testdir=$(mktemp -d "${TMPDIR:-/tmp}/tmp.XXXXXXXXXXX" | tee -a $tmpdirs)
 
 }
 
