@@ -18,7 +18,7 @@ cd /docked
 
 if [ -f /bin/bash ]
 then
-    su "$run_as" -c /bin/bash
+    su "$run_as" -s /bin/bash
 else
-    su "$run_as" -c /bin/sh
+    su "$run_as" -s /bin/sh
 fi
