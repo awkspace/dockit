@@ -2,15 +2,15 @@
 
 help() {
 
-    echo 'dockit - Run a Docker image overlaid on the current directory'
-    echo
-    echo 'Usage: dockit [options] <image>'
-    echo
-    echo 'Options:'
-    echo -- '-h         this help text'
-    echo -- '-d         detach; run in background, useful for scripting'
-    echo -- '-m <user>  mount directory as <user> instead of default'
-    echo -- '-r <user>  run shell as <user> instead of default'
+    printf 'dockit - Run a Docker image overlaid on the current directory\n\n'
+
+    printf 'Usage: dockit [options] <image>\n\n'
+
+    printf 'Options:\n'
+    printf -- '-h         this help text\n'
+    printf -- '-d         detach; run in background, useful for scripting\n'
+    printf -- '-m <user>  mount directory as <user> instead of default\n'
+    printf -- '-r <user>  run shell as <user> instead of default\n'
 
     exit 0
 
@@ -32,11 +32,11 @@ do
             run_as=$OPTARG
             ;;
         \?)
-            echo "Unrecognized option: -$OPTARG"
+            printf "Unrecognized option: -$OPTARG\n"
             exit 1
             ;;
         :)
-            echo -- "-$OPTARG requires an argument" 1>&2
+            printf -- "-$OPTARG requires an argument\n" 1>&2
             exit 1
             ;;
     esac
