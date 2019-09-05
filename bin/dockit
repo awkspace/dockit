@@ -92,4 +92,4 @@ docker run \
     -v /overlay \
     -v "$(pwd)":/host \
     "$img" \
-    /bin/sh -c 'echo $lib_src | base64 -d | tar -x -C /bin && /bin/dockit-init'
+    /bin/sh -c 'echo "$lib_src" | base64 -d | tar -x -C /bin && /bin/dockit-init'
