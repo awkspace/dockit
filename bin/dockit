@@ -2,7 +2,7 @@
 
 help() {
 
-    echo 'dockit - Mount the current directory into a Docker container'
+    echo 'dockit - Run a Docker image overlaid on the current directory'
     echo
     echo 'Usage: dockit [options] <image>'
     echo

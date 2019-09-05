@@ -1,7 +1,4 @@
-# dockit: Jump into a container
-
-Quickly jump into a container image of your choosing, taking all the files from
-the current directory with you.
+# dockit: Overlay a Docker image onto the current directory
 
 ```text
 $ touch file1 file2
@@ -53,7 +50,7 @@ doesn’t meet your needs, you can also run it directly from the cloned copy as
 ## Usage
 
 ```text
-dockit - Mount the current directory into a Docker container
+dockit - Run a Docker image overlaid on the current directory
 
 Usage: dockit [options] <image>
 
