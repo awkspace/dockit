@@ -57,6 +57,7 @@ Usage: dockit [options] <image>
 Options:
 -h         this help text
 -d         detach; run in background, useful for scripting
+-n         no mount; just run the image
 -m <user>  mount directory as <user> instead of default
 -r <user>  run shell as <user> instead of default
 ```

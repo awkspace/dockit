@@ -9,6 +9,7 @@ help() {
     printf 'Options:\n'
     printf -- '-h         this help text\n'
     printf -- '-d         detach; run in background, useful for scripting\n'
+    printf -- '-n         no mount; just run the image\n'
     printf -- '-m <user>  mount directory as <user> instead of default\n'
     printf -- '-r <user>  run shell as <user> instead of default\n'
 
@@ -16,7 +17,7 @@ help() {
 
 }
 
-while getopts ":hdm:r:" opt
+while getopts ":hdnm:r:" opt
 do
     case $opt in
         h)
@@ -27,6 +28,9 @@ do
             ;;
         m)
             mount_as=$OPTARG
+            ;;
+        n)
+            no_mount=1
             ;;
         r)
             run_as=$OPTARG
@@ -75,21 +79,35 @@ fi
 
 lib="$(cd "$(dirname "$0")/../lib" || exit; pwd)/dockit"
 lib_src="$(tar -cf - -C "$lib" . | base64)"
+# shellcheck disable=SC2016
+lib_install='echo "$lib_src" | base64 -d | tar -x -C /bin'
 
 export lib_src
 export mount_as
 export run_as
 
-docker run \
-    --rm \
-    -u 0:0 \
-    --privileged \
-    -ti \
-    ${detach:+-d} \
-    -e lib_src \
-    -e mount_as \
-    -e run_as \
-    -v /overlay \
-    -v "$(pwd)":/host \
-    "$img" \
-    /bin/sh -c 'echo "$lib_src" | base64 -d | tar -x -C /bin && /bin/dockit-init'
+
+if [ "$no_mount" ]
+then
+    docker run \
+        --rm \
+        -ti \
+        ${detach:+-d} \
+        -e lib_src \
+        "$img" \
+        /bin/sh -c "$lib_install && /bin/dockit-sh"
+else
+     docker run \
+         --rm \
+         -u 0:0 \
+         --privileged \
+         -ti \
+         ${detach:+-d} \
+         -e lib_src \
+         -e mount_as \
+         -e run_as \
+         -v /overlay \
+         -v "$(pwd)":/host \
+         "$img" \
+         /bin/sh -c "$lib_install && /bin/dockit-init"
+fi

@@ -206,6 +206,15 @@ _() {
 }
 run_test "$name" _
 
+name="Skip mount"
+_() {
+    set -x
+
+    dock=$(dock -n -d alpine)
+    ! docker exec "$dock" ls /docked
+}
+run_test "$name" _
+
 results
 teardown
 
