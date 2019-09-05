@@ -2,15 +2,15 @@
 
 help() {
 
-    echo "dockit - Mount the current directory into a Docker container"
+    echo 'dockit - Mount the current directory into a Docker container'
     echo
-    echo "Usage: dockit [options] <image>"
+    echo 'Usage: dockit [options] <image>'
     echo
-    echo "Options:"
-    echo "-h         this help text"
-    echo "-d         detach; run in background, useful for scripting"
-    echo "-m <user>  mount directory as <user> instead of default"
-    echo "-r <user>  run shell as <user> instead of default"
+    echo 'Options:'
+    echo -- '-h         this help text'
+    echo -- '-d         detach; run in background, useful for scripting'
+    echo -- '-m <user>  mount directory as <user> instead of default'
+    echo -- '-r <user>  run shell as <user> instead of default'
 
     exit 0
 
@@ -36,12 +36,12 @@ do
             exit 1
             ;;
         :)
-            echo "-$OPTARG requires an argument" 1>&2
+            echo -- "-$OPTARG requires an argument" 1>&2
             exit 1
             ;;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 if [ $# -eq 0 ]
 then
@@ -49,9 +49,9 @@ then
 fi
 
 img=$1
-docker pull $img 1>&2
+docker pull "$img" 1>&2
 
-user=$(docker image inspect $img --format "{{.ContainerConfig.User}}")
+user=$(docker image inspect "$img" --format "{{.ContainerConfig.User}}")
 
 if [ -z "$mount_as" ]
 then
@@ -73,10 +73,10 @@ then
     fi
 fi
 
-scriptdir="$(dirname "$0")"
-lib="$(cd $scriptdir/../lib ; pwd)/dockit"
+lib="$(cd "$(dirname "$0")/../lib" || exit; pwd)/dockit"
+lib_src="$(tar -cf - -C "$lib" . | base64)"
 
-export lib_src="$(tar -cf - -C $lib . | base64)"
+export lib_src
 export mount_as
 export run_as
 
@@ -90,6 +90,6 @@ docker run \
     -e mount_as \
     -e run_as \
     -v /overlay \
-    -v $(pwd):/host \
-    $img \
+    -v "$(pwd)":/host \
+    "$img" \
     /bin/sh -c 'echo $lib_src | base64 -d | tar -x -C /bin && /bin/dockit-init'

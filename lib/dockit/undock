@@ -15,9 +15,9 @@ tmp=$(mktemp -d)
 for file in "$@"
 do
 
-    fullpath=$(readlink -f $file)
-    dirname=$(dirname $fullpath)
-    basename=$(basename $fullpath)
+    fullpath=$(readlink -f "$file")
+    dirname=$(dirname "$fullpath")
+    basename=$(basename "$fullpath")
 
     if [ ! "$dirname" = "/docked" ]
     then
@@ -25,12 +25,12 @@ do
         exit 1
     fi
 
-    mv $fullpath /tmp/$basename
-    mv /tmp/$basename /host/$basename
+    mv "$fullpath" "/tmp/$basename"
+    mv "/tmp/$basename" "/host/$basename"
 
-    chown -R $hostuser:$hostgroup /host/$basename
-    chown -R $dockuser:$dockgroup $fullpath
+    chown -R "$hostuser:$hostgroup" "/host/$basename"
+    chown -R "$dockuser:$dockgroup" "$fullpath"
 
 done
 
-rm -rf $tmp
+rm -rf "$tmp"

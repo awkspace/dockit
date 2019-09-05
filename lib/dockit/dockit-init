@@ -2,6 +2,9 @@
 
 set -e
 
+[ -z "$mount_as" ] && mount_as=0
+[ -z "$run_as" ] && run_as=0
+
 mkdir -p /overlay/upper /overlay/work /docked
 
 [ -f /sys/module/overlay/parameters/metacopy ] && metacopy=1
@@ -10,12 +13,12 @@ mount -t \
     -o lowerdir=/host,upperdir=/overlay/upper,workdir=/overlay/work${metacopy:+,metacopy=on} \
     /docked
 
-chown -R $mount_as:$(id -g $mount_as) /docked
+chown -R "$mount_as:$(id -g $mount_as)" /docked
 cd /docked
 
 if [ -f /bin/bash ]
 then
-    su $run_as -c /bin/bash
+    su "$run_as" -c /bin/bash
 else
-    su $run_as -c /bin/sh
+    su "$run_as" -c /bin/sh
 fi
