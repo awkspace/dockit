@@ -32,11 +32,11 @@ do
             run_as=$OPTARG
             ;;
         \?)
-            printf "Unrecognized option: -$OPTARG\n"
+            printf 'Unrecognized option: -%s\n' "$OPTARG" 1>&2
             exit 1
             ;;
         :)
-            printf -- "-$OPTARG requires an argument\n" 1>&2
+            printf -- '-%s requires an argument\n' "$OPTARG" 1>&2
             exit 1
             ;;
     esac
