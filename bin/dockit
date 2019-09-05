@@ -76,7 +76,7 @@ fi
 scriptdir="$(dirname "$0")"
 lib="$(cd $scriptdir/../lib ; pwd)/dockit"
 
-export lib_src=$(tar -cf - -C $lib . | base64)
+export lib_src="$(tar -cf - -C $lib . | base64)"
 export mount_as
 export run_as
 
