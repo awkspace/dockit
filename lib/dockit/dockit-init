@@ -16,9 +16,4 @@ mount -t \
 chown -R "$mount_as:$(id -g $mount_as)" /docked
 cd /docked
 
-if [ -f /bin/bash ]
-then
-    su "$run_as" -s /bin/bash
-else
-    su "$run_as" -s /bin/sh
-fi
+su "$run_as" -s "$(dirname "$0")/dockit-sh"

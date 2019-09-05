@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ -f /bin/bash ]
+then
+    /bin/bash
+else
+    /bin/sh
+fi
