@@ -76,15 +76,20 @@ fi
 scriptdir="$(dirname "$0")"
 lib="$(cd $scriptdir/../lib ; pwd)/dockit"
 
+export lib_src=$(tar -cf - -C $lib . | base64)
+export mount_as
+export run_as
+
 docker run \
     --rm \
     -u 0:0 \
     --privileged \
     -ti \
     ${detach:+-d} \
+    -e lib_src \
+    -e mount_as \
+    -e run_as \
     -v /overlay \
-    -v $lib/init:/dockit-init \
-    -v $lib/undock:/bin/undock \
     -v $(pwd):/host \
     $img \
-    /dockit-init -m $mount_as -r $run_as
+    /bin/sh -c 'echo $lib_src | base64 -d | tar -x -C /bin && /bin/dockit-init'
