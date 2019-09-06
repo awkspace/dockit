@@ -10,6 +10,7 @@ help() {
     printf -- '-h         this help text\n'
     printf -- '-d         detach; run in background, useful for scripting\n'
     printf -- '-n         no mount; just run the image\n'
+    printf -- '-i         skip ignores; do not remove files ignored by VCS or Docker\n'
     printf -- '-m <user>  mount directory as <user> instead of default\n'
     printf -- '-r <user>  run shell as <user> instead of default\n'
 
@@ -17,7 +18,7 @@ help() {
 
 }
 
-while getopts ":hdnm:r:" opt
+while getopts ":hdnim:r:" opt
 do
     case $opt in
         h)
@@ -34,6 +35,9 @@ do
             ;;
         r)
             run_as=$OPTARG
+            ;;
+        i)
+            ignore_skip=1
             ;;
         \?)
             printf 'Unrecognized option: -%s\n' "$OPTARG" 1>&2
@@ -94,7 +98,7 @@ lib_install='printf "$lib_src" | base64 -d | tar -x -C /bin'
 export lib_src
 export mount_as
 export run_as
-
+export ignore_skip
 
 if [ "$no_mount" ]
 then
@@ -115,6 +119,7 @@ else
          -e lib_src \
          -e mount_as \
          -e run_as \
+         -e ignore_skip \
          -v /overlay \
          -v "$(pwd)":/host \
          "$img" \
