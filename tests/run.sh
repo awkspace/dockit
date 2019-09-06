@@ -215,6 +215,29 @@ _() {
 }
 run_test "$name" _
 
+name="Respect VCS ignores"
+_() {
+    set -x
+
+    touch $testdir/file.keep
+    touch $testdir/file.ignore
+    touch $testdir/ignoreme
+
+    mkdir $testdir/ignoredir
+    touch $testdir/ignoredir/file
+
+    echo '*.ignore' >> $testdir/.gitignore
+    echo 'ignoreme' >> $testdir/.gitignore
+    echo "ignoredir/" >> $testdir/.gitignore
+
+    dock=$(dock -d alpine)
+    docker exec "$dock" [ -f /docked/file.keep ]
+    docker exec "$dock" [ ! -f /docked/file.ignore ]
+    docker exec "$dock" [ ! -f /docked/ignoreme ]
+    docker exec "$dock" [ ! -d /docked/ignoredir ]
+}
+run_test "$name" _
+
 results
 teardown
 

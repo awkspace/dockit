@@ -13,7 +13,27 @@ mount -t \
     -o lowerdir=/host,upperdir=/overlay/upper,workdir=/overlay/work${metacopy:+,metacopy=on} \
     /docked
 
-chown -R "$mount_as:$(id -g $mount_as)" /docked
 cd /docked
+
+if [ -z "$ignore_skip" ]
+then
+    for ignorefile in .gitignore .dockerignore
+    do
+        if [ -f "$ignorefile" ]
+        then
+            while read line
+            do
+                if [ -d "$line" ]
+                then
+                    rm -rf "$line"
+                else
+                    find -type f -name "$line" -exec rm {} \;
+                fi
+            done < "$ignorefile"
+        fi
+    done
+fi
+
+chown -R "$mount_as:$(id -g $mount_as)" /docked
 
 su "$run_as" -s "$(dirname "$0")/dockit-sh"
