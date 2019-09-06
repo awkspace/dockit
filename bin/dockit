@@ -78,7 +78,16 @@ then
 fi
 
 lib="$(cd "$(dirname "$0")/../lib" || exit; pwd)/dockit"
-lib_src="$(tar -cf - -C "$lib" . | base64 -w 0)"
+
+case "$OSTYPE" in
+    darwin*)
+        lib_src="$(tar -cf - -C "$lib" . | base64)"
+        ;;
+    *)
+        lib_src="$(tar -cf - -C "$lib" . | base64 -w 0)"
+        ;;
+esac
+
 # shellcheck disable=SC2016
 lib_install='printf "$lib_src" | base64 -d | tar -x -C /bin'
 
