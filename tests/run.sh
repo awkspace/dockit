@@ -233,8 +233,12 @@ _() {
     dock=$(dock -d alpine)
     docker exec "$dock" [ -f /docked/file.keep ]
     docker exec "$dock" [ ! -f /docked/file.ignore ]
+    [ -f "$testdir/file.ignore" ]
     docker exec "$dock" [ ! -f /docked/ignoreme ]
+    [ -f "$testdir/ignoreme" ]
     docker exec "$dock" [ ! -d /docked/ignoredir ]
+    [ -d "$testdir/ignoredir" ]
+    [ -f "$testdir/ignoredir/file" ]
 }
 run_test "$name" _
 
