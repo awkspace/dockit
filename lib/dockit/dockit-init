@@ -23,12 +23,9 @@ then
         then
             while read line
             do
-                if [ -d "$line" ]
-                then
-                    rm -rf "$line"
-                else
-                    find -type f -name "$line" -exec rm {} \;
-                fi
+                find -type d -name "${line%/}" -prune -exec /bin/sh -c \
+                    "mv {} {}.trashed ; rm -rf /overlay/upper/{}.trashed" \;
+                find -type f -name "$line" -exec rm {} \;
             done < "$ignorefile"
         fi
     done
