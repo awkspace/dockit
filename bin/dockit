@@ -7,18 +7,19 @@ help() {
     printf 'Usage: dockit [options] <image>\n\n'
 
     printf 'Options:\n'
-    printf -- '-h         this help text\n'
-    printf -- '-d         detach; run in background, useful for scripting\n'
-    printf -- '-n         no mount; just run the image\n'
-    printf -- '-i         skip ignores; do not remove files ignored by VCS or Docker\n'
-    printf -- '-m <user>  mount directory as <user> instead of default\n'
-    printf -- '-r <user>  run shell as <user> instead of default\n'
+    printf -- '-h            this help text\n'
+    printf -- '-d            detach; run in background, useful for scripting\n'
+    printf -- '-n            no mount; just run the image\n'
+    printf -- '-i            skip ignores; do not remove files ignored by VCS or Docker\n'
+    printf -- '-m <user>     mount directory as <user> instead of default\n'
+    printf -- '-r <user>     run shell as <user> instead of default\n'
+    printf -- '-o <options>  pass <options> to docker run'
 
     exit 0
 
 }
 
-while getopts ":hdnim:r:" opt
+while getopts ":hdnim:r:o:" opt
 do
     case $opt in
         h)
@@ -38,6 +39,9 @@ do
             ;;
         i)
             ignore_skip=1
+            ;;
+        o)
+            dockopts=$OPTARG
             ;;
         \?)
             printf 'Unrecognized option: -%s\n' "$OPTARG" 1>&2
@@ -102,6 +106,7 @@ export ignore_skip
 
 if [ "$no_mount" ]
 then
+
     docker run \
         --rm \
         -ti \
@@ -109,19 +114,26 @@ then
         -e lib_src \
         "$img" \
         /bin/sh -c "$lib_install && /bin/dockit-sh"
+
 else
-     docker run \
-         --rm \
-         -u 0:0 \
-         --privileged \
-         -ti \
-         ${detach:+-d} \
-         -e lib_src \
-         -e mount_as \
-         -e run_as \
-         -e ignore_skip \
-         -v /overlay \
-         -v "$(pwd)":/host \
-         "$img" \
-         /bin/sh -c "$lib_install && /bin/dockit-init"
+
+    cmd='docker run \
+    --rm \
+    -u 0:0 \
+    --privileged \
+    -ti \
+    -e lib_src \
+    -e mount_as \
+    -e run_as \
+    -e ignore_skip \
+    -v /overlay \
+    -v "$(pwd)":/host'
+
+    [ "$detach" ] && cmd="$cmd -d"
+    [ "$dockopts" ] && cmd="$cmd $dockopts"
+
+    cmd="$cmd \"$img\" /bin/sh -c \"$lib_install && /bin/dockit-init\""
+
+    eval "$cmd"
+
 fi
