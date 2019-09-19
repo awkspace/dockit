@@ -31,6 +31,6 @@ then
     done
 fi
 
-chown -R "$mount_as:$(id -g $mount_as)" /docked
+[ -n "$metacopy" ] && chown -R "$mount_as:$(id -g $mount_as)" /docked
 
 su "$run_as" -s "$(dirname "$0")/dockit-sh"

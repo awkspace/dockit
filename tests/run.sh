@@ -8,6 +8,8 @@ setup() {
     containers=$(mktemp)
     images=$(mktemp)
 
+    [ -f /sys/module/overlay/parameters/metacopy ] && metacopy=1
+
 }
 
 teardown() {
@@ -123,7 +125,7 @@ _() {
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "0 0" ]
 }
-run_test "$name" _
+[ "$metacopy" ] && run_test "$name" _
 
 name="Changes in /docked do not propagate to host"
 _() {
@@ -190,7 +192,7 @@ _() {
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "65534 65534" ]
 }
-run_test "$name" _
+[ "$metacopy" ] && run_test "$name" _
 
 name="Default to Docker USER"
 _() {
@@ -204,7 +206,7 @@ _() {
     ls=$(docker exec $dock ls -ln /docked/file)
     [ "$(echo $ls | awk '{print $3,$4}')" = "1234 1234" ]
 }
-run_test "$name" _
+[ "$metacopy" ] && run_test "$name" _
 
 name="Skip mount"
 _() {
