@@ -13,13 +13,14 @@ help() {
     printf -- '-i            skip ignores; do not remove files ignored by VCS or Docker\n'
     printf -- '-m <user>     mount directory as <user> instead of default\n'
     printf -- '-r <user>     run shell as <user> instead of default\n'
-    printf -- '-o <options>  pass <options> to docker run'
+    printf -- '-o <options>  pass <options> to docker run\n'
+    printf -- '-u            update image before mounting'
 
     exit 0
 
 }
 
-while getopts ":hdnim:r:o:" opt
+while getopts ":hdnim:r:o:u" opt
 do
     case $opt in
         h)
@@ -43,6 +44,9 @@ do
         o)
             dockopts=$OPTARG
             ;;
+        u)
+            update_image=1
+            ;;
         \?)
             printf 'Unrecognized option: -%s\n' "$OPTARG" 1>&2
             exit 1
@@ -61,7 +65,10 @@ then
 fi
 
 img=$1
-docker pull "$img" 1>&2
+if [ ! -z "$update_image" ]
+then
+    docker pull "$img" 1>&2
+fi
 
 user=$(docker image inspect "$img" --format "{{.ContainerConfig.User}}")
 
