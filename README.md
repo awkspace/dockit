@@ -47,6 +47,10 @@ The included installer script will install `dockit` to `/usr/local`. If that
 doesn’t meet your needs, you can also run it directly from the cloned copy as
 `bin/dockit`.
 
+### Completion
+Completion scripts are included for `bash` and `zsh`.  
+See `install.sh` for more information
+
 ## Usage
 
 ```text

@@ -1,0 +1,3 @@
+#compdef dockit
+
+complete -C "docker images --format '{{.Repository}}:{{.Tag}}'" dockit
