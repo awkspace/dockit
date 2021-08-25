@@ -16,14 +16,15 @@ for file in "$@"
 do
 
     fullpath=$(readlink -f "$file")
-    dirname=$(dirname "$fullpath")
     basename=$(basename "$fullpath")
 
-    if [ ! "$dirname" = "/docked" ]
-    then
-        echo "$1 is not inside of /docked"
-        exit 1
-    fi
+    case $fullpath in
+        /docked/*) ;;
+        *)
+            echo "$1 is not inside of /docked"
+            exit 1
+        ;;
+    esac
 
     mv "$fullpath" "/tmp/$basename"
     mv "/tmp/$basename" "/host/$basename"
