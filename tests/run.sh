@@ -150,11 +150,16 @@ _() {
 
     dock=$(dock -d alpine)
 
-    docker exec $dock touch /docked/file
-    docker exec $dock undock /docked/file
+    docker exec "$dock" mkdir /docked/dir
+    docker exec "$dock" /bin/sh -c 'echo "hello world" > /docked/dir/file'
+    docker exec "$dock" undock /docked/dir/file
 
-    docker exec $dock [ -f /docked/file ]
-    [ -f $testdir/file ]
+    docker exec "$dock" apk add tree
+    docker exec "$dock" tree /host
+    docker exec "$dock" tree /docked
+    docker exec "$dock" [ -f /docked/dir/file ]
+    [ -f "$testdir/dir/file" ]
+    [ "$(cat "$testdir/dir/file")" = "hello world" ]
 }
 run_test "$name" _
 

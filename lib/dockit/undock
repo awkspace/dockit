@@ -16,21 +16,27 @@ for file in "$@"
 do
 
     fullpath=$(readlink -f "$file")
-    basename=$(basename "$fullpath")
+    if [ ! -f "$fullpath" ]
+    then
+        echo "$file does not exist or is a directory"
+    fi
 
     case $fullpath in
         /docked/*) ;;
         *)
-            echo "$1 is not inside of /docked"
+            echo "$file is not in /docked"
             exit 1
         ;;
     esac
 
-    mv "$fullpath" "/tmp/$basename"
-    mv "/tmp/$basename" "/host/$basename"
+    relpath=$(echo "$fullpath" | sed 's/\/docked\/\(.\+\)/\1/')
+    reldir=$(echo "$relpath" | sed "s/^\\(.*\\)$(basename "$fullpath")\$/\\1/")
 
-    chown -R "$hostuser:$hostgroup" "/host/$basename"
-    chown -R "$dockuser:$dockgroup" "$fullpath"
+    mkdir -p "/host/$reldir"
+    cp "$fullpath" "/host/$relpath"
+
+    chown -R "$hostuser:$hostgroup" "/host/$reldir"
+    chown -R "$dockuser:$dockgroup" "/docked/$reldir"
 
 done
 
