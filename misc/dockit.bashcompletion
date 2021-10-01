@@ -1,0 +1,9 @@
+# dockit(1) completion                                       -*- shell-script -*-
+_dockit()
+{
+	local images
+	images="$( docker images --format '{{.Repository}}:{{.Tag}}' )"
+	COMPREPLY=( $( compgen -W "$images" -- "$cur" ) )
+	__ltrim_colon_completions "$cur"
+}
+complete -F _dockit dockit
